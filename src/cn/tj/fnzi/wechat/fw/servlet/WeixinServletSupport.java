@@ -8,6 +8,7 @@ import static cn.tj.fnzi.wechat.fw.util.StrUtil.isNotBlank;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public abstract class WeixinServletSupport extends HttpServlet {
     /**
      * 微信消息处理器列表
      */
-    private static List<MessageHandle> messageHandles;
+    private static List<MessageHandle> messageHandles = new ArrayList<MessageHandle>();
 
     /**
      * 微信事件处理器列表
@@ -450,5 +451,9 @@ public abstract class WeixinServletSupport extends HttpServlet {
         String timestamp = request.getParameter("timestamp");
         String nonce = request.getParameter("nonce");
         return SignUtil.checkSignature(getToken(), signature, timestamp, nonce);
+    }
+
+    protected static void addMessageHandles(MessageHandle messageHandle) {
+        WeixinServletSupport.messageHandles.add(messageHandle);
     }
 }
