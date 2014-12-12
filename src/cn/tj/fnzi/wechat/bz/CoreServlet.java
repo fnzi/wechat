@@ -16,6 +16,7 @@ public class CoreServlet extends WeixinServletSupport {
     
     static {
         addMessageHandles(new Message001Handle());
+        addMessageHandles(new Message002Handle());
     }
 
     protected BaseMsg handleTextMsg(TextReqMsg msg) {

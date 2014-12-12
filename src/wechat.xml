@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wechat>
+	<events>
+		<event type="subscribe"></event>
+		<event type="unsubscribe"></event>
+		<event type="CLICK"></event>
+		<event type="VIEW"></event>
+		<event type="LOCATION"></event>
+		<event type="SCAN"></event>
+	</events>
+	<messages>
+		<message type="text"></message>
+		<message type="image"></message>
+		<message type="voice"></message>
+		<message type="video"></message>
+		<message type="location"></message>
+		<message type="link"></message>
+	</messages>
+</wechat>
