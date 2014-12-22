@@ -2,14 +2,10 @@ package cn.tj.fnzi.wechat.fw.servlet;
 
 import static cn.tj.fnzi.wechat.fw.util.BeanUtil.isNull;
 import static cn.tj.fnzi.wechat.fw.util.BeanUtil.nonNull;
-import static cn.tj.fnzi.wechat.fw.util.CollectionUtil.isEmpty;
-import static cn.tj.fnzi.wechat.fw.util.CollectionUtil.isNotEmpty;
 import static cn.tj.fnzi.wechat.fw.util.StrUtil.isNotBlank;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -17,10 +13,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import cn.tj.fnzi.wechat.fw.handle.EventHandle;
-import cn.tj.fnzi.wechat.fw.handle.MessageHandle;
-import cn.tj.fnzi.wechat.fw.message.BaseMsg;
-import cn.tj.fnzi.wechat.fw.message.TextMsg;
+import cn.tj.fnzi.wechat.fw.handle.WeChatHandler;
 import cn.tj.fnzi.wechat.fw.message.req.BaseEvent;
 import cn.tj.fnzi.wechat.fw.message.req.BaseReq;
 import cn.tj.fnzi.wechat.fw.message.req.BaseReqMsg;
@@ -35,45 +28,16 @@ import cn.tj.fnzi.wechat.fw.message.req.ReqType;
 import cn.tj.fnzi.wechat.fw.message.req.TextReqMsg;
 import cn.tj.fnzi.wechat.fw.message.req.VideoReqMsg;
 import cn.tj.fnzi.wechat.fw.message.req.VoiceReqMsg;
+import cn.tj.fnzi.wechat.fw.message.resp.BaseMsg;
 import cn.tj.fnzi.wechat.fw.util.MessageUtil;
-import cn.tj.fnzi.wechat.fw.util.SignUtil;
+import cn.tj.fnzi.wechat.fw.util.SpringUtil;
 
 /**
- * 微信公众平台交互操作基类，提供几乎所有微信公众平台交互方式
- * 基于javaee servlet框架，方便使用此框架的项目集成
- *
- * @author peiyu
- * @since 1.1
+ * 微信公众平台交互操作基类，提供几乎所有微信公众平台交互方式 基于javaee servlet框架，方便使用此框架的项目集成
  */
 public abstract class WeixinServletSupport extends HttpServlet {
 
-    /**
-     * 微信消息处理器列表
-     */
-    private static List<MessageHandle> messageHandles = new ArrayList<MessageHandle>();
-
-    /**
-     * 微信事件处理器列表
-     */
-    private static List<EventHandle> eventHandles;
-
-    /**
-     * 子类重写，加入自定义的微信消息处理器，细化消息的处理
-     *
-     * @return 微信消息处理器列表
-     */
-    protected List<MessageHandle> getMessageHandles() {
-        return null;
-    }
-
-    /**
-     * 子类重写，加入自定义的微信事件处理器，细化消息的处理
-     *
-     * @return 微信事件处理器列表
-     */
-    protected List<EventHandle> getEventHandles() {
-        return null;
-    }
+    private static final long serialVersionUID = 1L;
 
     /**
      * 子类用于提供token用于绑定微信公众平台
@@ -85,15 +49,19 @@ public abstract class WeixinServletSupport extends HttpServlet {
     /**
      * 重写servlet中的get方法，用于处理微信服务器绑定，置为final方法，用户已经无需重写这个方法啦
      *
-     * @param request  http请求对象
-     * @param response http响应对象
-     * @throws ServletException servlet异常
-     * @throws IOException      IO异常
+     * @param request
+     *            http请求对象
+     * @param response
+     *            http响应对象
+     * @throws ServletException
+     *             servlet异常
+     * @throws IOException
+     *             IO异常
      */
     @Override
     protected final void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if (isLegal(request)) {
-            //绑定微信服务器成功
+            // 绑定微信服务器成功
             PrintWriter pw = response.getWriter();
             pw.write(request.getParameter("echostr"));
             pw.flush();
@@ -104,17 +72,21 @@ public abstract class WeixinServletSupport extends HttpServlet {
     /**
      * 重写servlet中的post方法，用于接收微信服务器发来的消息，置为final方法，用户已经无需重写这个方法啦
      *
-     * @param request  http请求对象
-     * @param response http响应对象
-     * @throws ServletException servlet异常
-     * @throws IOException      IO异常
+     * @param request
+     *            http请求对象
+     * @param response
+     *            http响应对象
+     * @throws ServletException
+     *             servlet异常
+     * @throws IOException
+     *             IO异常
      */
     @Override
     protected final void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if (!isLegal(request)) {
             return;
         }
-        //设置响应编码格式
+        // 设置响应编码格式
         response.setCharacterEncoding("UTF-8");
         String resp = processRequest(request);
         PrintWriter pw = response.getWriter();
@@ -126,7 +98,8 @@ public abstract class WeixinServletSupport extends HttpServlet {
     /**
      * 处理微信服务器发来的请求方法
      *
-     * @param request http请求对象
+     * @param request
+     *            http请求对象
      * @return 处理消息的结果，已经是接口要求的xml报文了
      */
     private String processRequest(HttpServletRequest request) {
@@ -136,6 +109,8 @@ public abstract class WeixinServletSupport extends HttpServlet {
         String msgType = reqMap.get("MsgType");
 
         BaseMsg msg = null;
+        
+        WeChatHandler handler = null;
 
         if (msgType.equals(ReqType.EVENT)) {
             String eventType = reqMap.get("Event");
@@ -144,52 +119,45 @@ public abstract class WeixinServletSupport extends HttpServlet {
                 String eventKey = reqMap.get("EventKey");
                 QrCodeEvent event = new QrCodeEvent(eventKey, ticket);
                 buildBasicEvent(reqMap, event);
-                msg = handleQrCodeEvent(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("scanEventHandler");
+                msg = handler.handle(event);
             }
             if (eventType.equals(EventType.SUBSCRIBE)) {
                 BaseEvent event = new BaseEvent();
                 buildBasicEvent(reqMap, event);
-                msg = handleSubscribe(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("subscribeEventHandler");
+                msg = handler.handle(event);
             } else if (eventType.equals(EventType.UNSUBSCRIBE)) {
                 BaseEvent event = new BaseEvent();
                 buildBasicEvent(reqMap, event);
-                msg = handleUnsubscribe(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("unsubscribeEventHandler");
+                msg = handler.handle(event);
             } else if (eventType.equals(EventType.CLICK)) {
                 String eventKey = reqMap.get("EventKey");
                 MenuEvent event = new MenuEvent(eventKey);
                 buildBasicEvent(reqMap, event);
-                msg = handleMenuClickEvent(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("clickEventHandler");
+                msg = handler.handle(event);
             } else if (eventType.equals(EventType.VIEW)) {
                 String eventKey = reqMap.get("EventKey");
                 MenuEvent event = new MenuEvent(eventKey);
                 buildBasicEvent(reqMap, event);
-                msg = handleMenuViewEvent(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("viewEventHandler");
+                msg = handler.handle(event);
             } else if (eventType.equals(EventType.LOCATION)) {
                 double latitude = Double.parseDouble(reqMap.get("Latitude"));
                 double longitude = Double.parseDouble(reqMap.get("Longitude"));
                 double precision = Double.parseDouble(reqMap.get("Precision"));
-                LocationEvent event = new LocationEvent(latitude, longitude,
-                        precision);
+                LocationEvent event = new LocationEvent(latitude, longitude, precision);
                 buildBasicEvent(reqMap, event);
-                msg = handleLocationEvent(event);
-                if (isNull(msg)) {
-                    msg = processEventHandle(event);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("locationEventHandler");
+                msg = handler.handle(event);
             }
 
         } else {
@@ -197,61 +165,53 @@ public abstract class WeixinServletSupport extends HttpServlet {
                 String content = reqMap.get("Content");
                 TextReqMsg textReqMsg = new TextReqMsg(content);
                 buildBasicReqMsg(reqMap, textReqMsg);
-                msg = handleTextMsg(textReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(textReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("textMessageHandler");
+                msg = handler.handle(textReqMsg);
             } else if (msgType.equals(ReqType.IMAGE)) {
                 String picUrl = reqMap.get("PicUrl");
                 String mediaId = reqMap.get("MediaId");
                 ImageReqMsg imageReqMsg = new ImageReqMsg(picUrl, mediaId);
                 buildBasicReqMsg(reqMap, imageReqMsg);
-                msg = handleImageMsg(imageReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(imageReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("imageMessageHandler");
+                msg = handler.handle(imageReqMsg);
             } else if (msgType.equals(ReqType.VOICE)) {
                 String format = reqMap.get("Format");
                 String mediaId = reqMap.get("MediaId");
                 String recognition = reqMap.get("Recognition");
-                VoiceReqMsg voiceReqMsg = new VoiceReqMsg(mediaId, format,
-                        recognition);
+                VoiceReqMsg voiceReqMsg = new VoiceReqMsg(mediaId, format, recognition);
                 buildBasicReqMsg(reqMap, voiceReqMsg);
-                msg = handleVoiceMsg(voiceReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(voiceReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("voiceMessageHandler");
+                msg = handler.handle(voiceReqMsg);
             } else if (msgType.equals(ReqType.VIDEO)) {
                 String thumbMediaId = reqMap.get("ThumbMediaId");
                 String mediaId = reqMap.get("MediaId");
                 VideoReqMsg videoReqMsg = new VideoReqMsg(mediaId, thumbMediaId);
                 buildBasicReqMsg(reqMap, videoReqMsg);
-                msg = handleVideoMsg(videoReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(videoReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("videoMessageHandler");
+                msg = handler.handle(videoReqMsg);
             } else if (msgType.equals(ReqType.LOCATION)) {
                 double locationX = Double.parseDouble(reqMap.get("Location_X"));
                 double locationY = Double.parseDouble(reqMap.get("Location_Y"));
                 int scale = Integer.parseInt(reqMap.get("Scale"));
                 String label = reqMap.get("Label");
-                LocationReqMsg locationReqMsg = new LocationReqMsg(locationX,
-                        locationY, scale, label);
+                LocationReqMsg locationReqMsg = new LocationReqMsg(locationX, locationY, scale, label);
                 buildBasicReqMsg(reqMap, locationReqMsg);
-                msg = handleLocationMsg(locationReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(locationReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("locationMessageHandler");
+                msg = handler.handle(locationReqMsg);
             } else if (msgType.equals(ReqType.LINK)) {
                 String title = reqMap.get("Title");
                 String description = reqMap.get("Description");
                 String url = reqMap.get("Url");
                 LinkReqMsg linkReqMsg = new LinkReqMsg(title, description, url);
                 buildBasicReqMsg(reqMap, linkReqMsg);
-                msg = handleLinkMsg(linkReqMsg);
-                if (isNull(msg)) {
-                    msg = processMessageHandle(linkReqMsg);
-                }
+                
+                handler = (WeChatHandler) SpringUtil.getBean("linkMessageHandler");
+                msg = handler.handle(linkReqMsg);
             }
 
         }
@@ -262,171 +222,6 @@ public abstract class WeixinServletSupport extends HttpServlet {
             result = msg.toXml();
         }
         return result;
-    }
-
-    //充当锁
-    private static final Object lock = new Object();
-
-    private BaseMsg processMessageHandle(BaseReqMsg msg) {
-        if (isEmpty(messageHandles)) {
-            synchronized (lock) {
-                messageHandles = this.getMessageHandles();
-            }
-        }
-        if (isNotEmpty(messageHandles)) {
-            for (MessageHandle messageHandle : messageHandles) {
-                BaseMsg resultMsg = messageHandle.handle(msg);
-                if (nonNull(resultMsg)) {
-                    return resultMsg;
-                }
-            }
-        }
-        return null;
-    }
-
-    private BaseMsg processEventHandle(BaseEvent event) {
-        if (isEmpty(eventHandles)) {
-            synchronized (lock) {
-                eventHandles = this.getEventHandles();
-            }
-        }
-        if (isNotEmpty(eventHandles)) {
-            for (EventHandle eventHandle : eventHandles) {
-                BaseMsg resultMsg = eventHandle.handle(event);
-                if (nonNull(resultMsg)) {
-                    return resultMsg;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 处理文本消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleTextMsg(TextReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理图片消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleImageMsg(ImageReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理语音消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleVoiceMsg(VoiceReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理视频消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleVideoMsg(VideoReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理地理位置消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleLocationMsg(LocationReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理链接消息，有需要时子类重写
-     *
-     * @param msg 请求消息对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleLinkMsg(LinkReqMsg msg) {
-        return handleDefaultMsg(msg);
-    }
-
-    /**
-     * 处理扫描二维码事件，有需要时子类重写
-     *
-     * @param event 扫描二维码事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleQrCodeEvent(QrCodeEvent event) {
-        return handleDefaultEvent(event);
-    }
-
-    /**
-     * 处理地理位置事件，有需要时子类重写
-     *
-     * @param event 地理位置事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleLocationEvent(LocationEvent event) {
-        return handleDefaultEvent(event);
-    }
-
-    /**
-     * 处理菜单点击事件，有需要时子类重写
-     *
-     * @param event 菜单点击事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleMenuClickEvent(MenuEvent event) {
-        return handleDefaultEvent(event);
-    }
-
-    /**
-     * 处理菜单跳转事件，有需要时子类重写
-     *
-     * @param event 菜单跳转事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleMenuViewEvent(MenuEvent event) {
-        return handleDefaultEvent(event);
-    }
-
-    /**
-     * 处理添加关注事件，有需要时子类重写
-     *
-     * @param event 添加关注事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleSubscribe(BaseEvent event) {
-        return new TextMsg("感谢您的关注!");
-    }
-
-    /**
-     * 处理取消关注事件，有需要时子类重写
-     *
-     * @param event 取消关注事件对象
-     * @return 响应消息对象
-     */
-    protected BaseMsg handleUnsubscribe(BaseEvent event) {
-        return null;
-    }
-
-    protected BaseMsg handleDefaultMsg(BaseReqMsg msg) {
-        return null;
-    }
-
-    protected BaseMsg handleDefaultEvent(BaseEvent event) {
-        return null;
     }
 
     private void buildBasicReqMsg(Map<String, String> reqMap, BaseReqMsg reqMsg) {
@@ -450,11 +245,9 @@ public abstract class WeixinServletSupport extends HttpServlet {
         String signature = request.getParameter("signature");
         String timestamp = request.getParameter("timestamp");
         String nonce = request.getParameter("nonce");
-//        return SignUtil.checkSignature(getToken(), signature, timestamp, nonce);
+        // return SignUtil.checkSignature(getToken(), signature, timestamp,
+        // nonce);
         return true;
     }
 
-    protected static void addMessageHandles(MessageHandle messageHandle) {
-        WeixinServletSupport.messageHandles.add(messageHandle);
-    }
 }

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wechat>
 	<events>
-		<event type="subscribe"></event>
-		<event type="unsubscribe"></event>
-		<event type="CLICK"></event>
-		<event type="VIEW"></event>
-		<event type="LOCATION"></event>
-		<event type="SCAN"></event>
+		<event type="subscribe" handler="subscribeEventHandler"></event>
+		<event type="unsubscribe" handler="unsubscribeEventHandler"></event>
+		<event type="CLICK" handler="clickEventHandler"></event>
+		<event type="VIEW" handler="viewEventHandler"></event>
+		<event type="LOCATION" handler="locationEventHandler"></event>
+		<event type="SCAN" handler="scanEventHandler"></event>
 	</events>
 	<messages>
-		<message type="text"></message>
-		<message type="image"></message>
-		<message type="voice"></message>
-		<message type="video"></message>
-		<message type="location"></message>
-		<message type="link"></message>
+		<message type="text" handler="textMessageHandler"></message>
+		<message type="image" handler="imageMessageHandler"></message>
+		<message type="voice" handler="voiceMessageHandler"></message>
+		<message type="video" handler="videoMessageHandler"></message>
+		<message type="location" handler="locationMessageHandler"></message>
+		<message type="link" handler="linkMessageHandler"></message>
 	</messages>
 </wechat>

@@ -14,10 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cn.tj.fnzi.wechat.fw.handle.EventHandle;
-import cn.tj.fnzi.wechat.fw.handle.MessageHandle;
-import cn.tj.fnzi.wechat.fw.message.BaseMsg;
-import cn.tj.fnzi.wechat.fw.message.TextMsg;
 import cn.tj.fnzi.wechat.fw.message.req.BaseEvent;
 import cn.tj.fnzi.wechat.fw.message.req.BaseReq;
 import cn.tj.fnzi.wechat.fw.message.req.BaseReqMsg;
@@ -32,6 +28,8 @@ import cn.tj.fnzi.wechat.fw.message.req.ReqType;
 import cn.tj.fnzi.wechat.fw.message.req.TextReqMsg;
 import cn.tj.fnzi.wechat.fw.message.req.VideoReqMsg;
 import cn.tj.fnzi.wechat.fw.message.req.VoiceReqMsg;
+import cn.tj.fnzi.wechat.fw.message.resp.BaseMsg;
+import cn.tj.fnzi.wechat.fw.message.resp.TextMsg;
 import cn.tj.fnzi.wechat.fw.util.MessageUtil;
 import cn.tj.fnzi.wechat.fw.util.SignUtil;
 
