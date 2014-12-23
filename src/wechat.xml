@@ -3,17 +3,17 @@
 	<events>
 		<event type="subscribe" handler="subscribeEventHandler"></event>
 		<event type="unsubscribe" handler="unsubscribeEventHandler"></event>
-		<event type="CLICK" handler="clickEventHandler"></event>
-		<event type="VIEW" handler="viewEventHandler"></event>
-		<event type="LOCATION" handler="locationEventHandler"></event>
-		<event type="SCAN" handler="scanEventHandler"></event>
+		<event type="CLICK" handler="clickEventHandler" enable="false"></event>
+		<event type="VIEW" handler="viewEventHandler" enable="false"></event>
+		<event type="LOCATION" handler="locationEventHandler" enable="false"></event>
+		<event type="SCAN" handler="scanEventHandler" enable="false"></event>
 	</events>
 	<messages>
 		<message type="text" handler="textMessageHandler"></message>
-		<message type="image" handler="imageMessageHandler"></message>
-		<message type="voice" handler="voiceMessageHandler"></message>
-		<message type="video" handler="videoMessageHandler"></message>
-		<message type="location" handler="locationMessageHandler"></message>
-		<message type="link" handler="linkMessageHandler"></message>
+		<message type="image" handler="imageMessageHandler" enable="false"></message>
+		<message type="voice" handler="voiceMessageHandler" enable="false"></message>
+		<message type="video" handler="videoMessageHandler" enable="false"></message>
+		<message type="location" handler="locationMessageHandler" enable="false"></message>
+		<message type="link" handler="linkMessageHandler" enable="false"></message>
 	</messages>
 </wechat>
