@@ -9,7 +9,9 @@
 		<event type="SCAN" handler="scanEventHandler" enable="false"></event>
 	</events>
 	<messages>
-		<message type="text" handler="textMessageHandler"></message>
+		<message type="text" handler="textMessageHandler">
+			<keyword id=""></keyword>
+		</message>
 		<message type="image" handler="imageMessageHandler" enable="false"></message>
 		<message type="voice" handler="voiceMessageHandler" enable="false"></message>
 		<message type="video" handler="videoMessageHandler" enable="false"></message>
