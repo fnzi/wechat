@@ -1,5 +1,8 @@
 package cn.tj.fnzi.wechat.fw.util;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * 字符串常用方法工具类
  *
@@ -16,7 +19,8 @@ public final class StrUtil {
     /**
      * 判断一个字符串是否为空，null也会返回true
      *
-     * @param str 需要判断的字符串
+     * @param str
+     *            需要判断的字符串
      * @return 是否为空，null也会返回true
      */
     public static boolean isBlank(String str) {
@@ -26,7 +30,8 @@ public final class StrUtil {
     /**
      * 判断一个字符串是否不为空
      *
-     * @param str 需要判断的字符串
+     * @param str
+     *            需要判断的字符串
      * @return 是否为空
      */
     public static boolean isNotBlank(String str) {
@@ -36,14 +41,15 @@ public final class StrUtil {
     /**
      * 判断一组字符串是否有空值
      *
-     * @param strs 需要判断的一组字符串
+     * @param strs
+     *            需要判断的一组字符串
      * @return 判断结果，只要其中一个字符串为null或者为空，就返回true
      */
     public static boolean isHasBlank(String... strs) {
         if (null == strs || 0 == strs.length) {
             return true;
         } else {
-            //这种代码如果用java8就会很优雅了
+            // 这种代码如果用java8就会很优雅了
             for (String str : strs) {
                 if (null == str || "".equals(str.trim())) {
                     return true;
@@ -51,5 +57,22 @@ public final class StrUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * <pre>
+     * 清理[\t\r\n]
+     * @param str
+     * @return
+     * </pre>
+     */
+    public static String replaceBlank(String str) {
+        String dest = "";
+        if (str != null) {
+            Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+            Matcher m = p.matcher(str);
+            dest = m.replaceAll("");
+        }
+        return dest;
     }
 }

@@ -10,7 +10,7 @@
 	</events>
 	<messages>
 		<message type="text" handler="textMessageHandler">
-			<keyword id=""></keyword>
+			<keyword id="天气预报" handler="textMessageHandler"></keyword>
 		</message>
 		<message type="image" handler="imageMessageHandler" enable="false"></message>
 		<message type="voice" handler="voiceMessageHandler" enable="false"></message>
