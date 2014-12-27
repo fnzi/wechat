@@ -72,7 +72,7 @@ public abstract class WeixinServletSupport extends HttpServlet {
         String toUserName = reqMap.get("ToUserName");
         String msgType = reqMap.get("MsgType");
 
-        LOG.debug("收到消息,消息类型:{}", msgType);
+        LOG.info("收到消息,消息类型:{}", msgType);
 
         BaseMsg msg = null;
 

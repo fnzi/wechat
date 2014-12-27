@@ -10,12 +10,14 @@
 	</events>
 	<messages>
 		<message type="text" handler="textMessageHandler">
-			<keyword id="天气预报" handler="textMessageHandler"></keyword>
+			<keyword id="天气预报" handler="weatherService"></keyword>
+			<keyword id="翻译" handler="fanyiService"></keyword>
 		</message>
 		<message type="image" handler="imageMessageHandler" enable="false"></message>
 		<message type="voice" handler="voiceMessageHandler" enable="false"></message>
 		<message type="video" handler="videoMessageHandler" enable="false"></message>
-		<message type="location" handler="locationMessageHandler" enable="false"></message>
+		<message type="location" handler="locationMessageHandler"
+			enable="false"></message>
 		<message type="link" handler="linkMessageHandler" enable="false"></message>
 	</messages>
 </wechat>
